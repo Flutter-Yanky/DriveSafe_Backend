@@ -1,0 +1,83 @@
+const InsurSchema = require("../models/insur");
+const mindee = require("mindee");
+const RTO_INSUR_Schema = require("../models/insurrto");
+const user = require("../models/user");
+const fs = require('fs');
+
+exports.INSURUpload = async (req, res) => {
+    let userInsurObj = {}
+    try {
+
+        console.log("Working...");
+        const document = req.files.document
+        if (!document) {
+            return res.status(400).json({
+                success: false,
+                message: 'image not found',
+            });
+        }
+
+        let path = __dirname + "/uploads/" + Date.now() + `.${document.name.split('.')[1]}`;
+        document.mv(path, (err) => {
+            if (err) {
+                console.log(err);
+            }
+        });
+
+        const mindeeClient = new mindee.Client({ apiKey: process.env.MINDEE_APIKEY });
+
+        // Load a file from disk
+        const inputSource = mindeeClient.docFromPath(path);
+
+        // Create a custom endpoint for your product
+        const customEndpoint = mindeeClient.createEndpoint(
+        "insurance_1",
+        "Shruti-Deshmane",
+        "1" // Defaults to "1"
+        );
+
+        // Parse the file asynchronously.
+        const asyncApiResponse = mindeeClient.enqueueAndParse(
+        mindee.product.GeneratedV1,
+        inputSource,
+        { endpoint: customEndpoint }
+        );
+
+
+       
+        // Handle the response Promise
+        asyncApiResponse.then((resp) => {
+
+           
+        
+        userInsurObj = {
+            rto_insur_policy_number : resp.document.inference.prediction.fields.get('policy_number').value,
+            rto_insur_from : resp.document.inference.prediction.fields.get('from').value,
+            rto_insur_to : resp.document.inference.prediction.fields.get('to').value,
+            rto_insur_issued_name : resp.document.inference.prediction.fields.get('issued_name').value,
+            rto_insur_registration_no : resp.document.inference.prediction.fields.get('registration_no').value,
+            rto_insur_policy_status : resp.document.inference.prediction.fields.get('policy_status').value  
+        }
+
+        fs.unlinkSync(path);
+        
+        }).then(async()=>{
+          
+            const insur_data = await RTO_INSUR_Schema.create(userInsurObj)
+
+            return res.status(200).json({
+                success: true,
+                data : insur_data,
+                message: 'insur added rto_insur successfully',
+            });
+        })
+
+        
+
+    } catch (err) {
+        return res.status(400).json({
+            success: false,
+            message: "Error occured due to some technical issue"
+        })
+    }
+}
