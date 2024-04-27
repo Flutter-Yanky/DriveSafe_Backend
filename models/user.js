@@ -63,6 +63,7 @@ const userSchema = new mongoose.Schema(
             required : true,
             enum:["user", "officer",]
         },
+        notification:[],
         token:{
             type:String,
         }

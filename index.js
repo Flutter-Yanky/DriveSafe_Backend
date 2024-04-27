@@ -3,7 +3,7 @@ const app = express();
 const dbConnect = require("./config/database");
 const cors = require("cors");
 const cookieParser = require('cookie-parser');
-require("dotenv").config();
+    require("dotenv").config();
 const bodyParser = require('body-parser');
 
 const corsOptions = {

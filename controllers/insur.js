@@ -9,14 +9,9 @@ function checkFakeDoc(userObj, orgObj) {
 
     console.log(orgObj[0]);
   
-    // console.log(userObj.insur_policy_number.trim(),orgObj[0].rto_puc_certificate_No.trim());
-    // console.log(userObj.insur_issued_name.trim(),orgObj[0].rto_puc_registration_No.trim());
-    // console.log(userObj.insur_registration_no.trim(),orgObj[0].rto_puc_emission_norms.trim());
-  
     if (userObj.insur_policy_number.trim() === orgObj[0].rto_insur_policy_number.trim()
-      && userObj.insur_issued_name.trim() === orgObj[0].rto_insur_issued_name.trim()
-    && userObj.insur_registration_no.trim() === orgObj[0].rto_insur_registration_no.trim()  
-    && userObj.insur_policy_status.trim() === orgObj[0].rto_insur_policy_status.trim()
+        && userObj.insur_issued_name.trim() === orgObj[0].rto_insur_issued_name.trim()
+        && userObj.insur_policy_status.trim() === orgObj[0].rto_insur_policy_status.trim()
     ){ 
         
         // dates checking for registered_date in rc book 
@@ -33,7 +28,6 @@ function checkFakeDoc(userObj, orgObj) {
         const date1 = new Date(userObj.insur_to);
         const date2 = new Date(formattedDate);
   
-  
         // dates checking for  registered_validity in rc book 
         date = new Date(orgObj.rto_insur_from);
   
@@ -46,7 +40,7 @@ function checkFakeDoc(userObj, orgObj) {
   
         const date3 = new Date(userObj.insur_from);
         const date4 = new Date(formattedDate);
-  
+
   
         if(date1.getTime() !== date2.getTime() && date3.getTime() !== date4.getTime()){
             return false;
