@@ -18,10 +18,14 @@ const InsurSchema = new mongoose.Schema(
             type: String,
             required:true,
         },
-        insur_address:{
+        insur_engine_no:{
             type : String,
             required : true
-        }
+        },
+        insur_chasis_no:{
+            type : String,
+            required : true
+        },
     }
 )
 

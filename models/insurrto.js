@@ -22,10 +22,15 @@ const RTO_INSUR_Schema = new mongoose.Schema(
             type : String,
             required : true
         },
-        rto_insur_policy_status:{
+        rto_insur_engine_no:{
             type : String,
             required : true
-        }
+        },
+        rto_insur_chasis_no:{
+            type : String,
+            required : true
+        },
+
     }
 )
 

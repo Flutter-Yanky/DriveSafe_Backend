@@ -10,114 +10,7 @@ const RTO_RC_schema = require("../models/rcrto")
 const RTO_PUC_Schema = require("../models/pucrto")
 require("dotenv").config();
 
-const checkExpiryOfUser = async(userId) => {
-    const userInfo = await User.findById({_id : userId});
 
-
-    const dl_id = userInfo.user_dl_status['value'];
-    const puc_id = userInfo.user_puc_status['value'];
-    const rc_id = userInfo.user_rc_status['value'];
-    const insur_id  = userInfo.user_insur_status['value'];
-
-    // // db call
-
-    const dl_Data = await RTO_DL_schema.find({ dl_no : dl_id });
-
-    console.log(dl_Data);
-    
-    const puc_Data = await RTO_PUC_Schema.find({ rto_puc_certificate_No: puc_id});
-    
-    console.log(puc_Data);
-
-    const rc_Data = await RTO_RC_schema.find({ rc_registered_no : rc_id});
-    
-    console.log(rc_Data);
-
-    const insur_Data = await RTO_INSUR_Schema.find({ rto_insur_policy_number: insur_id});
-
-    console.log(insur_Data);
-
-    const TodaysDate = new Date();
-
-    console.log(TodaysDate);
-
-    if(dl_Data.length == 0) {
-        await User.updateOne({ _id: userId }, {
-            $push: {
-                notification: "Driving license is not uploaded yet please upload the document"
-            }
-        },
-            { multi: true },
-        )
-    }
-    else if(dl_Data.length == 0 && dl_Data[0].dl_valid_till < TodaysDate){
-        await User.updateOne({ _id: userId }, {
-            $push: {
-                notification: "Driving license is expired, please update the document"
-            }
-        },
-            { multi: true },
-        )
-    }
-
-    if(rc_Data.length == 0) {
-        await User.updateOne({ _id: userId }, {
-            $push: {
-                notification: "Rc book is not uploaded yet please upload the document"
-            }
-        },
-            { multi: true },
-        )
-    }
-    else if(rc_Data.length == 0 && rc_Data[0].rc_registered_validity < TodaysDate){
-        await User.updateOne({ _id: userId }, {
-            $push: {
-                notification: "Rc book is expired, please update the document"
-            }
-        },
-            { multi: true },
-        )
-    }
-
-    if(puc_Data.length == 0){
-        await User.updateOne({ _id: userId }, {
-            $push: {
-                notification: "P.U.C. is not uploaded yet please upload the document"
-            }
-        },
-            { multi: true },
-        )
-    }
-    else if(puc_Data.length == 0 && puc_Data[0].rto_puc_validity < TodaysDate){
-        await User.updateOne({ _id: userId }, {
-            $push: {
-                notification: "P.U.C. is expired, please update the document"
-            }
-        },
-            { multi: true },
-        )
-    }
-
-    if(insur_Data.length == 0  ){
-        await User.updateOne({ _id: userId }, {
-            $push: {
-                notification: "Insurrance is not uploaded yet please upload the document."
-            }
-        },
-            { multi: true },
-        )
-    }else if(insur_Data.length == 0 && insur_Data[0].rto_insur_to < TodaysDate){
-       
-        await User.updateOne({ _id: userId }, {
-            $push: {
-                notification: "Insurrance is expired, please update the document"
-            }
-        },
-            { multi: true },
-        )
-    }
-
-}
 
 exports.Signin = async (req, res) => {
 
@@ -181,11 +74,6 @@ exports.Signin = async (req, res) => {
                 { multi: true },
             )
 
-
-            // check for notifications
-            const ch = checkExpiryOfUser(userId);
-
-            // 
 
             res.cookie("user_id", userId, {
                 expires: new Date(Date.now() + 60 * 60 * 1000),

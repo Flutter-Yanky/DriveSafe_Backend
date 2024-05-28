@@ -13,6 +13,7 @@ const { Fine } = require("../controllers/Fine");
 const { auth , isOfficer } = require("../middleware/auth");
 const {FineCollectionByUserId} = require("../controllers/fineColl");
 const { FineUser } = require("../controllers/fineUser");
+const {contactUS} = require("../controllers/contact");
 
 
 
@@ -24,6 +25,7 @@ router.post("/upload_rc",auth,RCUpload)
 router.post("/upload_puc",auth,PUCUpload)
 router.post("/upload_insur",auth,INSURUpload)
 router.get("/finecollection/:id",FineCollectionByUserId);
+router.post("/contact",contactUS)
 
 
 // For Officer

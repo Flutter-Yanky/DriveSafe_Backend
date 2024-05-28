@@ -11,7 +11,8 @@ function checkFakeDoc(userObj, orgObj) {
   
     if (userObj.insur_policy_number.trim() === orgObj[0].rto_insur_policy_number.trim()
         && userObj.insur_issued_name.trim() === orgObj[0].rto_insur_issued_name.trim()
-        && userObj.insur_policy_status.trim() === orgObj[0].rto_insur_policy_status.trim()
+        && userObj.insur_engine_no.trim() === orgObj[0].rto_insur_engine_no.trim()
+        && userObj.insur_chasis_no.trim() === orgObj[0].rto_insur_chasis_no.trim()
     ){ 
         
         // dates checking for registered_date in rc book 
@@ -49,12 +50,12 @@ function checkFakeDoc(userObj, orgObj) {
     }else{
         return false;
     }
-  }
+}
   
   
-  function isObjectEmpty(obj) {
+function isObjectEmpty(obj) {
     return Object.keys(obj).length === 0;
-  }
+}
 
 
 exports.INSURUpload = async (req, res) => {
@@ -84,7 +85,7 @@ exports.INSURUpload = async (req, res) => {
 
         // Create a custom endpoint for your product
         const customEndpoint = mindeeClient.createEndpoint(
-            "insurance_1",
+            "insurance",
             "Shruti-Deshmane",
             "1" // Defaults to "1"
         );
@@ -101,71 +102,123 @@ exports.INSURUpload = async (req, res) => {
         asyncApiResponse.then((resp) => {
 
             userInsurObj = {
-                insur_policy_number: resp.document.inference.prediction.fields.get('policy_number').value,
+                insur_policy_number: resp.document.inference.prediction.fields.get('policy_no').value,
                 insur_from: resp.document.inference.prediction.fields.get('from').value,
                 insur_to: resp.document.inference.prediction.fields.get('to').value,
-                insur_issued_name: resp.document.inference.prediction.fields.get('issued_name').value,
+                insur_issued_name: resp.document.inference.prediction.fields.get('name').value,
                 insur_registration_no: resp.document.inference.prediction.fields.get('registration_no').value,
-                insur_policy_status: resp.document.inference.prediction.fields.get('policy_status').value
+                insur_chasis_no : resp.document.inference.prediction.fields.get('chassis_no').value,
+                insur_engine_no : resp.document.inference.prediction.fields.get('engine_no').value,
             }
+
+            console.log(userInsurObj);
 
             fs.unlinkSync(path);
 
         }).then(async () => {
+            
+            // if insur_registration_no == NEW
+            // we need to get the vechile plate no from rc rto database
 
-            const checkuser = await RTO_RC_schema.find({ rc_registered_no: userInsurObj['insur_registration_no'] });
+            if(userInsurObj['insur_registration_no'].toLowerCase() == ('New').toLowerCase()){
 
-            console.log(checkuser);
-            console.log(userInsurObj['insur_registration_no']);
+                const checkuser = await RTO_RC_schema.find({  rc_engine_no : userInsurObj['insur_engine_no'] });
+                console.log("Line no 121 :"+checkuser[0].rc_registered_no);
 
-            if (isObjectEmpty(checkuser)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'uploaded document is not present in Rto database.',
-                });
-            } else {
-
-                if (checkuser[0].rc_registered_no != userInsurObj['insur_registration_no']) {
+                // rc madhala data(engine no) and insur (engine no) match or not
+                if (isObjectEmpty(checkuser)) {
                     return res.status(400).json({
                         success: false,
-                        message: "puc is not matching with rc book vehicle number"
-                    })
+                        message: 'Insurance document data is not present in Rto database ',
+                    });
+                }else{
+                  
+    
+                    const dataUser = await RTO_INSUR_Schema.find({ insur_policy_number: userInsurObj['policy_number'] });
+
+                    console.log("Line 145 :"+dataUser);
+
+                    const status = checkFakeDoc(userInsurObj, dataUser);
+                    if (!status) {
+                        return res.status(400).json({
+                            success: false,
+                            message: 'it is a fake document',
+                        });
+                    } else {
+                        
+                        //save
+                        const insur_data = await InsurSchema.create(userInsurObj)
+    
+                        await user.findByIdAndUpdate({ _id: req.user.id }, {
+    
+                            $set: {
+                                'user_insur_status.status': true,
+                                'user_insur_status.value': userInsurObj['insur_policy_number']
+                            }
+                        }, { multi: true },)
+    
+                        return res.status(200).json({
+                            success: true,
+                            data: insur_data,
+                            message: 'insur added rto_insur successfully',
+                        });
+
+                    }
                 }
+            }
+            // if insur_registration_no == Number
+            // we need to get the vechile plate no from rc rto database
+            else{
 
-                const dataUser = await RTO_INSUR_Schema.find({ insur_policy_number: userPucObj['policy_number'] });
+                const checkuser = await RTO_RC_schema.find({  rc_engine_no : userInsurObj['insur_engine_no'] });
 
-                const status = checkFakeDoc(userPucObj, dataUser);
+                // rc madhala data(engine no) and insur (engine no) match or not
+                if (isObjectEmpty(checkuser)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Insurance document data is not related to account user ',
+                    });
+
+                }
+              
+                const dataUser = await RTO_INSUR_Schema.find({ insur_policy_number: userInsurObj['policy_number'] });
+
+                console.log("Line 145 :"+dataUser);
+
+               
+
+                const status = checkFakeDoc(userInsurObj, dataUser);
                 if (!status) {
                     return res.status(400).json({
                         success: false,
                         message: 'it is a fake document',
                     });
                 } else {
-
+                    
+                    //save
                     const insur_data = await InsurSchema.create(userInsurObj)
 
                     await user.findByIdAndUpdate({ _id: req.user.id }, {
 
                         $set: {
                             'user_insur_status.status': true,
-                            'user_insur_status.value': userInsurObj['policy_number']
+                            'user_insur_status.value': userInsurObj['insur_policy_number']
                         }
-                    }, { multi: true },
-
-                    ).then(() => {
-                        console.log("data changed");
-                    })
+                    }, { multi: true },)
 
                     return res.status(200).json({
                         success: true,
                         data: insur_data,
                         message: 'insur added rto_insur successfully',
                     });
+
                 }
             }
+            
         })
 
-
+        
+        
 
     } catch (err) {
         return res.status(400).json({
