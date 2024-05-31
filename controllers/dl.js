@@ -15,7 +15,8 @@ function checkFakeDoc(userObj, orgObj) {
     if (userObj.name.trim() === orgObj[0].dl_name.trim() 
         && areEqual && userObj.state.trim() === orgObj[0].dl_state.trim()
         && userObj.dl_no.trim() === orgObj[0].dl_no.trim()) {
-
+        
+            
         
             const date = new Date(orgObj[0].dl_valid_till);
 
@@ -120,6 +121,9 @@ exports.DlUpload = async (req, res) => {
             const checkuser = await RTO_DL_schema.find({ dl_no: userObj['dl_no'] });
 
 
+            console.log(userObj);
+            console.log(checkuser);
+            
             // checking for fake document
             const status = checkFakeDoc(userObj, checkuser);
 

@@ -173,9 +173,7 @@ exports.PUCUpload = async (req, res) => {
                 message: 'Puc added successfully',
               });
 
-            }
-          
-
+            }         
         }
           
       })

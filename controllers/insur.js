@@ -85,8 +85,10 @@ exports.INSURUpload = async (req, res) => {
 
         // Create a custom endpoint for your product
         const customEndpoint = mindeeClient.createEndpoint(
-            "insurance",
+            "insurance_1",
+
             "Shruti-Deshmane",
+          
             "1" // Defaults to "1"
         );
 
@@ -120,7 +122,7 @@ exports.INSURUpload = async (req, res) => {
             // if insur_registration_no == NEW
             // we need to get the vechile plate no from rc rto database
 
-            if(userInsurObj['insur_registration_no'].toLowerCase() == ('New').toLowerCase()){
+            if(userInsurObj['insur_registration_no'] && userInsurObj['insur_registration_no'].toLowerCase() == ('New').toLowerCase()){
 
                 const checkuser = await RTO_RC_schema.find({  rc_engine_no : userInsurObj['insur_engine_no'] });
                 console.log("Line no 121 :"+checkuser[0].rc_registered_no);

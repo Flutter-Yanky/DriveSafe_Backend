@@ -12,15 +12,15 @@ const isSubstring = (string1, string2) => {
 
 function checkFakeDoc(userObj, orgObj) {
 
-   
-    const check1 = isSubstring(orgObj[0].rc_autority,userObj.authority);
 
-    const check2 = isSubstring(userObj.name,orgObj[0].rc_user_name)
+    const check1 = isSubstring(orgObj[0].rc_autority, userObj.authority);
 
-    if (check1 && userObj.chassis_no.trim() === orgObj[0].rc_chassis_no.trim() && 
-        userObj.engine_no.trim() === orgObj[0].rc_engine_no.trim() && 
-        check2 && userObj.registered_no.trim() === orgObj[0].rc_registered_no.trim()){
-        
+    const check2 = isSubstring(userObj.name, orgObj[0].rc_user_name)
+
+    if (check1 && userObj.chassis_no.trim() === orgObj[0].rc_chassis_no.trim() &&
+        userObj.engine_no.trim() === orgObj[0].rc_engine_no.trim() &&
+        check2 && userObj.registered_no.trim() === orgObj[0].rc_registered_no.trim()) {
+
 
         // dates checking for registered_date in rc book 
         let date = new Date(orgObj[0].rc_registered_date);
@@ -51,11 +51,11 @@ function checkFakeDoc(userObj, orgObj) {
         const date4 = new Date(formattedDate);
 
 
-        if(date1.getTime() !== date2.getTime() && date3.getTime() !== date4.getTime()){
+        if (date1.getTime() !== date2.getTime() && date3.getTime() !== date4.getTime()) {
             return false;
         }
-        return true; 
-    }else{
+        return true;
+    } else {
         return false;
     }
 }
@@ -124,20 +124,29 @@ exports.RCUpload = async (req, res) => {
                 registered_validity: resp.document.inference.prediction.fields.get('registered_validity').values[0].content
             }
 
+            console.log(userObj);
+
             fs.unlinkSync(path);
         })
             .then(async () => {
 
                 const CurrentUser = await user.findById({ _id: req.user.id });
-                const checkuser = await RTO_RC_schema.find({ rc_registered_no : userObj['registered_no'] });
+                const checkuser = await RTO_RC_schema.find({ rc_registered_no: userObj['registered_no'] });
 
-                 // check data is valid or not (empty or null)
+                console.log(checkuser);
+
+                // check data is valid or not (empty or null)
                 if (isObjectEmpty(checkuser)) {
                     return res.status(400).json({
                         success: false,
                         message: 'Data for this entry is not valid means falutly data or fake document',
                     });
                 }
+
+
+                console.log(userObj);
+                console.log(checkuser);
+
 
                 // checking for fake document
                 const status = checkFakeDoc(userObj, checkuser);
@@ -157,9 +166,9 @@ exports.RCUpload = async (req, res) => {
                         });
                     }
 
-                    const result = isSubstring(CurrentUser.user_name.toLowerCase().trim(),userObj.name.toLowerCase().trim())
+                    const result = isSubstring(CurrentUser.user_name.toLowerCase().trim(), userObj.name.toLowerCase().trim())
 
-                    if(result){
+                    if (result) {
 
                         const rc_autority = userObj['authority'];
                         const rc_chassis_no = userObj['chassis_no'];
@@ -183,7 +192,7 @@ exports.RCUpload = async (req, res) => {
 
 
                         // change the user status
-                        const updatedUser =  await user.findByIdAndUpdate({ _id: req.user.id }, {
+                        const updatedUser = await user.findByIdAndUpdate({ _id: req.user.id }, {
                             $set: {
                                 'user_rc_status.status': true,
                                 'user_rc_status.value': userObj.registered_no
@@ -193,13 +202,13 @@ exports.RCUpload = async (req, res) => {
                         ).then(() => {
                             console.log("data changed");
                         })
-                    }else{
+                    } else {
                         return res.status(400).json({
-                            success:false,
-                            message:"uploaded doucment is not match with current user"
+                            success: false,
+                            message: "uploaded doucment is not match with current user"
                         })
                     }
-                
+
                 }
 
                 return res.status(200).json({
